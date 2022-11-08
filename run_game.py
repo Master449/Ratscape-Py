@@ -8,9 +8,12 @@ import time
 pygame.init()
 
 # ----------------------  Player Related Variables  ---------------------- #
-PLAYER_X = 7
-PLAYER_Y = 10
+playerX = 7
+playerY = 10
 CanMove = True
+
+theRat = pygame.image.load("rat.png")
+ratRect = theRat.get_rect()
 
 # ----------------------  Rendering / Font Variables  ---------------------- #
 windowTitle = "RATSCAPE"
@@ -24,9 +27,9 @@ textBox_X = 30
 textBox_Y = 500
  
 # Map Cells
-WIDTH = 20
-HEIGHT = 20
-MARGIN = 0
+cellWidth = 20
+cellHeight = 20
+cellMargin = 0
 
 # Text Related
 titleFont = pygame.font.Font("runescape_uf.ttf", 36)
@@ -37,6 +40,12 @@ collisionText = "You can't go that way"
 
 # ----------------------  Map Related  ---------------------- #
 currentMap = "Dungeon.txt"
+grassColor = 'chartreuse4'
+playerColor = 'blue'
+wallColor = 'gray'
+doorColor = 'brown'
+lootColor = 'gold'
+enemyColor = 'red'
 
 # Load Map and remove whitespaces
 with open(currentMap, "r") as f:
@@ -45,7 +54,7 @@ with open(currentMap, "r") as f:
 Dungeon = [x.replace(" ", "") for x in Dungeon]
 Dungeon = [x.strip('\n') for x in Dungeon]
 
-# This sets the WIDTH and HEIGHT of of the map for rendering
+# This sets the cellWidth and cellHeight of of the map for rendering
 # this also allows for the map to be changed without having to change the code
 mapColumns = len(Dungeon[0])
 mapRows = len(Dungeon)
@@ -57,8 +66,8 @@ pygame.key.set_repeat()
 for i in range(len(Dungeon)):
     for j in range(len(Dungeon[i])):
         if Dungeon[i][j] == "P":
-            PLAYER_X = j
-            PLAYER_Y = i
+            playerX = j
+            playerY = i
 
 # ----------------------  Game Loop  ---------------------- #
 while running:
@@ -91,47 +100,47 @@ while running:
             if CanMove == True:
             # Up and Down
                 if event.key == pygame.K_w:
-                    PLAYER_Y -= 1
+                    playerY -= 1
                     
                     # if north is a wall
-                    if Dungeon[PLAYER_Y][PLAYER_X] == "W":
+                    if Dungeon[playerY][playerX] == "W":
                         currentTitle = "RATSCAPE"
                         currentText = collisionText
-                        PLAYER_Y += 1
-                    Dungeon[PLAYER_Y] = Dungeon[PLAYER_Y][:PLAYER_X] + "P" + Dungeon[PLAYER_Y][PLAYER_X + 1:]
-                    Dungeon[PLAYER_Y + 1] = Dungeon[PLAYER_Y + 1][:PLAYER_X] + " " + Dungeon[PLAYER_Y + 1][PLAYER_X + 1:]
+                        playerY += 1
+                    Dungeon[playerY] = Dungeon[playerY][:playerX] + "P" + Dungeon[playerY][playerX + 1:]
+                    Dungeon[playerY + 1] = Dungeon[playerY + 1][:playerX] + " " + Dungeon[playerY + 1][playerX + 1:]
                     
                 if event.key == pygame.K_s:
-                    PLAYER_Y += 1
+                    playerY += 1
                     
                     # if south is a wall
-                    if Dungeon[PLAYER_Y][PLAYER_X] == "W":
+                    if Dungeon[playerY][playerX] == "W":
                         currentText = collisionText
-                        PLAYER_Y -= 1
-                    Dungeon[PLAYER_Y] = Dungeon[PLAYER_Y][:PLAYER_X] + "P" + Dungeon[PLAYER_Y][PLAYER_X + 1:]
-                    Dungeon[PLAYER_Y - 1] = Dungeon[PLAYER_Y - 1][:PLAYER_X] + " " + Dungeon[PLAYER_Y - 1][PLAYER_X + 1:]
+                        playerY -= 1
+                    Dungeon[playerY] = Dungeon[playerY][:playerX] + "P" + Dungeon[playerY][playerX + 1:]
+                    Dungeon[playerY - 1] = Dungeon[playerY - 1][:playerX] + " " + Dungeon[playerY - 1][playerX + 1:]
 
                 # Left and Right
                 if event.key == pygame.K_a:
-                    PLAYER_X -= 1
+                    playerX -= 1
                     
                     # if west is a wall
-                    if Dungeon[PLAYER_Y][PLAYER_X] == "W":
+                    if Dungeon[playerY][playerX] == "W":
                         currentText = collisionText
-                        PLAYER_X += 1
-                    Dungeon[PLAYER_Y] = Dungeon[PLAYER_Y][:PLAYER_X] + "P" + Dungeon[PLAYER_Y][PLAYER_X + 1:]
-                    Dungeon[PLAYER_Y] = Dungeon[PLAYER_Y][:PLAYER_X + 1] + " " + Dungeon[PLAYER_Y][PLAYER_X + 2:]
+                        playerX += 1
+                    Dungeon[playerY] = Dungeon[playerY][:playerX] + "P" + Dungeon[playerY][playerX + 1:]
+                    Dungeon[playerY] = Dungeon[playerY][:playerX + 1] + " " + Dungeon[playerY][playerX + 2:]
 
                 if event.key == pygame.K_d:
-                    PLAYER_X += 1
+                    playerX += 1
                     
                     # if east is a wall
                     # or out of array bounds
-                    if Dungeon[PLAYER_Y][PLAYER_X] == "W":
+                    if Dungeon[playerY][playerX] == "W":
                         currentText = collisionText
-                        PLAYER_X -= 1
-                    Dungeon[PLAYER_Y] = Dungeon[PLAYER_Y][:PLAYER_X] + "P" + Dungeon[PLAYER_Y][PLAYER_X + 1:]
-                    Dungeon[PLAYER_Y] = Dungeon[PLAYER_Y][:PLAYER_X - 1] + " " + Dungeon[PLAYER_Y][PLAYER_X:]
+                        playerX -= 1
+                    Dungeon[playerY] = Dungeon[playerY][:playerX] + "P" + Dungeon[playerY][playerX + 1:]
+                    Dungeon[playerY] = Dungeon[playerY][:playerX - 1] + " " + Dungeon[playerY][playerX:]
 
             if event.key == pygame.K_q:
                 CanMove = False
@@ -140,24 +149,25 @@ while running:
             if event.key == pygame.K_e:
                 CanMove = True
                 currentText = "You are now able to move."
-
                 
-    
     for row in range(mapRows):
         for column in range(mapColumns):
-            color = pygame.Color('chartreuse4')
+            color = pygame.Color(grassColor)
             if Dungeon[row][column] == 'P':
-                color = pygame.Color('blue')
+                #color = pygame.Color(playerColor)
+                pygame.sprite.Sprite(theRat)
             if Dungeon[row][column] == 'L':
-                color = pygame.Color('green')
+                color = pygame.Color(lootColor)
             if Dungeon[row][column] == 'D':
-                color = pygame.Color('brown')
+                color = pygame.Color(doorColor)
             if Dungeon[row][column] == 'W':
-                color = pygame.Color('grey')
+                color = pygame.Color(wallColor)
+            if Dungeon[row][column] == 'E':
+                color = pygame.Color(enemyColor)
             pygame.draw.rect(screen,
                              color,
-                             [(MARGIN + WIDTH) * column + MARGIN,
-                              (MARGIN + HEIGHT) * row + MARGIN,
-                              WIDTH,
-                              HEIGHT])
+                             [(cellMargin + cellWidth) * column + cellMargin,
+                              (cellMargin + cellHeight) * row + cellMargin,
+                              cellWidth,
+                              cellHeight])
 
