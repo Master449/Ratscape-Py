@@ -6,11 +6,12 @@ from pygame.locals import *
 import time
 
 pygame.init()
+clock = pygame.time.Clock()
 
 # ----------------------  Player Related Variables  ---------------------- #
+CanMove = True
 playerX = 7
 playerY = 10
-CanMove = True
 
 theRat = pygame.image.load("rat.png")
 ratRect = theRat.get_rect()
@@ -35,9 +36,10 @@ cellMargin = 0
 titleFont = pygame.font.Font("runescape_uf.ttf", 36)
 textFont = pygame.font.Font("runescape_uf.ttf", 24)
 currentTitle = "RATSCAPE"
-currentText = "Welcome"
+currentText = "Welcome to Ratscape!"
 collisionText = "You can't go that way"
-
+lastText = ""
+textPause = 50
 # ----------------------  Map Related  ---------------------- #
 currentMap = "Dungeon.txt"
 grassColor = 'chartreuse4'
@@ -69,26 +71,18 @@ for i in range(len(Dungeon)):
             playerX = j
             playerY = i
 
-# ----------------------  Game Loop  ---------------------- #
-while running:
-    pygame.time.Clock().tick(60)
+def handle_user_input():
+    global playerX
+    global playerY
+    global CanMove
+    global currentText
+    global collisionText
+    global currentTitle
 
-    titleText = titleFont.render(currentTitle, True, (255, 255, 255))
-    bodyText = textFont.render(currentText, True, (255, 255, 255))
-    chadUnderline = textFont.render("_________________________________________________________________________", True, (255, 255, 255))
+    events = pygame.event.get()
 
-    screen.blit(textEraser, (textBox_X, textBox_Y))
-    screen.blit(chadUnderline, (textBox_X, textBox_Y + 20))
-    screen.blit(titleText, (textBox_X, textBox_Y))
-    screen.blit(bodyText, (textBox_X, textBox_Y + 50))
-
-    # Refresh the screen
-    
-    pygame.display.flip()
-
-    # Check for player input
-    for event in pygame.event.get():
-
+    for event in events:
+        
         # Check if the player quits
         if event.type == pygame.QUIT:
             running = False
@@ -149,13 +143,20 @@ while running:
             if event.key == pygame.K_e:
                 CanMove = True
                 currentText = "You are now able to move."
-                
+
+def draw_map():
+    global playerX
+    global playerY
+    global currentTitle
+    global currentText
+    global CanMove
+
     for row in range(mapRows):
         for column in range(mapColumns):
             color = pygame.Color(grassColor)
             if Dungeon[row][column] == 'P':
-                #color = pygame.Color(playerColor)
-                pygame.sprite.Sprite(theRat)
+                color = pygame.Color(playerColor)
+                #pygame.sprite.Sprite(theRat)
             if Dungeon[row][column] == 'L':
                 color = pygame.Color(lootColor)
             if Dungeon[row][column] == 'D':
@@ -170,4 +171,58 @@ while running:
                               (cellMargin + cellHeight) * row + cellMargin,
                               cellWidth,
                               cellHeight])
+
+def draw_ui():
+    global currentText
+    global currentTitle
+    global textBox_X
+    global textBox_Y
+    global lastText
+    global textPause
+
+    titleText = titleFont.render(currentTitle, True, (255, 255, 255))
+    bodyText = textFont.render(currentText, True, (255, 255, 255))
+    chadUnderline = textFont.render("_________________________________________________________________________", True, (255, 255, 255))
+    screen.blit(textEraser, (textBox_X, textBox_Y))
+    screen.blit(chadUnderline, (textBox_X, textBox_Y + 20))
+    screen.blit(titleText, (textBox_X, textBox_Y))
+
+    # if currentText has changed
+    if currentText != lastText:
+        for char in currentText:
+        # Render the text
+            text_surface = textFont.render(char, True, (255, 255, 255))
+
+            # Blit the text to the screen
+            screen.blit(text_surface, (textBox_X, textBox_Y + 50))
+
+            # Update the display
+            pygame.display.flip()
+
+            # Move the starting position for the next character
+            textBox_X += textFont.size(char)[0]
+
+            # Pause for a short time
+            clock.tick(textPause)
+
+        # Reset the starting position for the next line
+        textBox_X = 30
+        lastText = currentText
+    else:
+        screen.blit(bodyText, (textBox_X, textBox_Y + 50))
+
+# ----------------------  Game Loop  ---------------------- #
+while running:
+    # Refresh the screen
+    pygame.display.flip()
+
+    # Check for player input
+    handle_user_input()
+                
+    # Draw the map
+    draw_map()
+
+    # Draw the UI
+    draw_ui()
+    pygame.display.flip()
 
